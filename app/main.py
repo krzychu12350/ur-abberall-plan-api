@@ -2,8 +2,17 @@ import uvicorn
 from fastapi import FastAPI, __version__
 from .routers import system
 from plan import extract_data
+from fastapi.middleware.cors import CORSMiddleware
 
+origins = ["*"]
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(system.router, prefix="/system")
 
 
