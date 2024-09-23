@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import openpyxl
 import re
@@ -41,6 +42,13 @@ def extract_date(text):
         formatted_date = f"{int(day):02d}.{int(month):02d}.{year}"
         return formatted_date
     return "No date found"
+
+
+def parse_time(time_str: str) -> datetime:
+    """Parses a time string into a datetime object. Handles time ranges by returning the start time."""
+    if '-' in time_str:
+        time_str = time_str.split('-')[0].strip()  # Take the first part as the start time
+    return datetime.strptime(time_str.strip(), '%H:%M')
 
 
 def extract_data():
@@ -146,5 +154,7 @@ def extract_data():
 
     # Print the resulting JSON array
     # print(json_data)
-    return data_list
 
+    # Sort the data list by start_time in ascending order
+    data_list.sort(key=lambda x: parse_time(x['start_time']))
+    return data_list
