@@ -1,0 +1,15 @@
+Kto umiałby się podjąć takiego zadania:
+Użytkownik strony wybiera 10 plików mp3 plus jeden dodatkowy z podkładem muzycznym. Program łączy audio w jeden plik, który:
+Zaczyna się od podkładu, fade-in 2 sekundy.
+Po 5 sekundach 1 plik mp3 (podkład jest cały czas)
+każdy następny plik mp3 odtwarza się po 10 sekundach od zakończenia poprzedniego.
+po ostatnim pliku 10s i 3s fade-out.
+cała interakcja ze strony www.
+Użytkownik zaznacza które pliki dodać, pliki są załadowane w cache,
+użytkownik naciska przycisk i dostaje link do ściągnięcia już gotowego połączonego audio.
+Powinna być też możliwośc ustalenia głośności podkładu muzycznego w
+stosunku do innych plików z możliwością odsłuchania/podglądu przed wysłaniem zadania.
+W podglądzie nie może być dostępny cały plik, tylko kilka sekund.
+Kto chciałby poćwiczyć probono?
+Mogę umieścić link do twojego profilu lub strony w podziękowaniu - planujemy bardzo duży ruch na stronie.
+Ewentualnie jaka cena tak po prostu?
