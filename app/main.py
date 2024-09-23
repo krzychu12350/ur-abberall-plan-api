@@ -2,6 +2,7 @@ from fastapi import FastAPI, __version__
 
 from .dtos.ISayHelloDto import ISayHelloDto
 from .routers import system
+from plan import extract_data
 
 app = FastAPI()
 app.include_router(system.router, prefix="/system")
@@ -21,6 +22,6 @@ async def hello_message(dto: ISayHelloDto):
 
 @app.get("/api/plan")
 async def ping():
-    data = [1, 2, 3, 4, 5]
+    data = extract_data()
     # print(data)
     return {"data": data}
