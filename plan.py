@@ -5,7 +5,7 @@ import openpyxl
 import re
 
 # Load the Excel workbook
-workbook = openpyxl.load_workbook('./plan.xlsx')
+workbook = openpyxl.load_workbook('./plan2.xlsx')
 sheet = workbook['Arkusz1']  # Replace 'Arkusz1' with your actual sheet name
 data_list = []
 
