@@ -14,6 +14,9 @@ def remove_words_from_string(input_string, words_to_remove):
 
 
 def find_nearest_godzina(col, start_row):
+    # Load the Excel workbook
+    workbook = openpyxl.load_workbook('./plan2.xlsx')
+    sheet = workbook['Arkusz1']  # Replace 'Arkusz1' with your actual sheet name
     """Find the nearest cell with value 'GODZINA' above the specified row in the given column."""
     for row in range(start_row - 1, 0, -1):  # Go upwards from start_row
         cell_value = sheet.cell(row=row, column=col).value
