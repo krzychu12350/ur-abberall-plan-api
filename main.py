@@ -1,17 +1,10 @@
 import shutil
-from collections import defaultdict
-from datetime import datetime
 from time import time
-from typing import List, Dict, Any
-
+from pydub import AudioSegment
 import uvicorn
 from fastapi import FastAPI, __version__, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from pydub import AudioSegment
-
-
-# import cloudinary.api
-# from plan import extract_data
+from starlette.responses import FileResponse
 
 
 def mergeFiles():
@@ -215,23 +208,6 @@ async def hello():
 @app.get('/')
 async def helloWorld():
     return {'res': 'HelloWorld'}
-
-
-@app.get("/api/schedules", response_model=[])
-async def get_schedules():
-    # data = extract_data()
-    #
-    # # Group schedules by date
-    # grouped_schedules = defaultdict(list)
-    #
-    # for schedule in data:
-    #     grouped_schedules[schedule['date']].append(schedule)
-    #
-    # # Sort the grouped schedules by date
-    # sorted_grouped_schedules = dict(
-    #     sorted(grouped_schedules.items(), key=lambda x: datetime.strptime(x[0], '%d.%m.%Y')))
-
-    return [1, 2, 3]
 
 
 if __name__ == "__main__":
