@@ -50,6 +50,13 @@ def parse_time(time_str: str) -> datetime:
         time_str = time_str.split('-')[0].strip()  # Take the first part as the start time
     return datetime.strptime(time_str.strip(), '%H:%M')
 
+def split_time_range(time_range):
+    if ' - ' in time_range:
+        return time_range.split(' - ')
+    elif '- ' in time_range:
+        return time_range.split('- ')
+    else:
+        return None, None  # In case the format is unexpected
 
 def extract_data():
     data_list = []
@@ -94,8 +101,16 @@ def extract_data():
             continue
         else:
             # print(time_ranges)
-            start_time = time_ranges[0].split(' - ')[0]
-            end_time = time_ranges[-1].split(' - ')[1]
+            # Handling start_time and end_time based on input ranges
+            start_range = time_ranges[0]
+            end_range = time_ranges[-1]
+
+            # Splitting start_time and end_time based on the delimiter found
+            start_time, _ = split_time_range(start_range)  # Only need the start part
+            _, end_time = split_time_range(end_range)  # Only need the end part
+
+            # print("Start Time:", start_time)
+            # print("End Time:", end_time)
 
             # Splitting the first and last elements
             # start_time = re.split(r' - |- ', time_ranges[0])[0]
