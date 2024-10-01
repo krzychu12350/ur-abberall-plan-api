@@ -1,150 +1,199 @@
-# import shutil
-# from time import time
-# from pydub import AudioSegment
-# import uvicorn
-# from fastapi import FastAPI, __version__, UploadFile
+# from fastapi import FastAPI, __version__, HTTPException, UploadFile
+# from fastapi.responses import JSONResponse
+# from fastapi import FastAPI, UploadFile, File, HTTPException
+# from collections import defaultdict
+# from datetime import datetime
+# from typing import List, Dict, Any
+# import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
+# import os
+# from dotenv import load_dotenv
 # from fastapi.middleware.cors import CORSMiddleware
-# from starlette.responses import FileResponse
+# import json
+# from datetime import datetime
+# import openpyxl
+# import re
+# import openpyxl
+# import re
+# from datetime import datetime
+# # Lo
+# # ad environment variables from .env file
+# load_dotenv()
+#
+# # Initialize Cloudinary
+# cloudinary.config(
+#     cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+#     api_key=os.getenv('CLOUDINARY_API_KEY'),
+#     api_secret=os.getenv('CLOUDINARY_API_SECRET')
+# )
+#
+# import openpyxl
+# import re
+# from datetime import datetime
+#
+# # Precompile the regular expression for date extraction
+# pattern = re.compile(r'\b\w+\s(\d{1,2})\.(\d{1,2})\.(\d{4})\b')
 #
 #
-# def mergeFiles():
-#     clap = AudioSegment.from_wav("sounds/clap.wav")
-#     # play(song)
+# def split_time_range(time_range):
+#     if ' - ' in time_range:
+#         return time_range.split(' - ')
+#     elif '- ' in time_range:
+#         return time_range.split('- ')
+#     else:
+#         return None, None  # In case the format is unexpected
 #
-#     fill = AudioSegment.from_wav("sounds/fill.wav")
-#
-#     impact = AudioSegment.from_wav("sounds/impact.wav")
-#
-#     # with_style = fill.append(clap, crossfade=100)
-#     #
-#     # three_concat = with_style.append(impact, crossfade=2000)
-#
-#     # play(clap + fill + impact)
-#     awesome = clap + fill + impact
-#     file_path = "./mashup.mp3"
-#     awesome.export(file_path, format="mp3", bitrate="192k")
-#
-#     return file_path
-#     # play(three_concat)
+# # Optimize the word removal by using a set for faster lookup
+# def remove_words_from_string(input_string, words_to_remove):
+#     words_to_remove_set = set(words_to_remove)
+#     return ' '.join(word for word in input_string.split() if word not in words_to_remove_set)
 #
 #
-# def convertMilisecondsToMinuteSecondFormat(millis):
-#     millis = int(millis)
-#     seconds = (millis / 1000) % 60
-#     seconds = int(seconds)
-#     minutes = (millis / (1000 * 60)) % 60
-#     minutes = int(minutes)
-#     hours = (millis / (1000 * 60 * 60)) % 24
-#
-#     return "%d:%d:%d" % (hours, minutes, seconds)
+# def find_nearest_godzina(sheet, col, start_row):
+#     """Find the nearest cell with value 'GODZINA' above the specified row in the given column."""
+#     for row in range(start_row - 1, 0, -1):  # Go upwards from start_row
+#         cell_value = sheet.cell(row=row, column=col).value
+#         if isinstance(cell_value, str) and cell_value.strip() == 'GODZINA':
+#             return row
+#     return None
 #
 #
-# def saveFileFromRequestOnDisk(file):
-#     file_location = f"./request-files/{file.filename}"
-#     with open(file_location, "wb+") as file_object:
-#         shutil.copyfileobj(file.file, file_object)
+# def extract_date(text):
+#     """Extract and format the date from text using a precompiled regex."""
+#     match = pattern.search(text)
+#     if match:
+#         day, month, year = match.groups()
+#         return f"{int(day):02d}.{int(month):02d}.{year}"
+#     return "No date found"
 #
 #
-# def addFadeInToAudioFile(filePath, duration):
-#     file = AudioSegment.from_mp3(filePath)
-#     return file.fade_in(duration)
+# def parse_time(time_str: str) -> datetime:
+#     """Parses a time string into a datetime object. Handles time ranges by returning the start time."""
+#     if '-' in time_str:
+#         time_str = time_str.split('-')[0].strip()  # Take the first part as the start time
+#     return datetime.strptime(time_str.strip(), '%H:%M')
 #
 #
-# def addFadeOutToAudioFile(filePath, duration):
-#     file = AudioSegment.from_wav(filePath)
-#     return file.fade_out(duration)
+# def extract_data():
+#     # Load the Excel workbook and sheet only once
+#     workbook = openpyxl.load_workbook('./plan3.xlsx')
+#     sheet = workbook['Arkusz1']  # Replace 'Arkusz1' with your actual sheet name
 #
+#     data_list = []
+#     words_to_remove = ["PONIEDZIAŁEK", "WTOREK", "ŚRODA", "CZWARTEK", "PIĄTEK"]
 #
-# def mixFileSounds(files, instrumental):
-#     global file_path, mix
-#     saveFileFromRequestOnDisk(instrumental)
+#     # Iterate through merged cell ranges
+#     for merged_range in sheet.merged_cells.ranges:
 #
-#     for f in files:
-#         saveFileFromRequestOnDisk(f)
+#         # Skip rows 1 to 3 and rows 947 till the end
+#         if merged_range.bounds[1] <= 3 or merged_range.bounds[1] >= 947:
+#             continue
 #
-#     file_names_list = []
-#     for file in files:
-#         file_names_list.append('request-files/' + file.filename)
+#         # Get the number of cells in the merged range
+#         min_row, min_col, max_row, max_col = merged_range.bounds
 #
-#     instrumental_path = 'request-files/' + instrumental.filename
-#     print("files")
-#     print(file_names_list)
-#     print("instrumental")
-#     print(instrumental_path)
-#     #  Zaczyna się od podkładu, fade-in 2 sekundy.
+#         num_cells = (max_row - min_row + 1) * (max_col - min_col + 1)
+#         # print(merged_range.bounds)
 #
-#     fade_in_instrumental = addFadeInToAudioFile(instrumental_path, 2000)
-#     fade_in_instrumental.export(instrumental_path, format="wav")
+#         # Access the second and fourth elements
+#         second_element = merged_range.bounds[1]  # Index 1 for the second element
+#         fourth_element = merged_range.bounds[3]  # Index 3 for the fourth element
+#         number_of_rows = fourth_element - second_element
 #
-#     '''
-#     Zaczyna się od podkładu, fade-in 2 sekundy.
-#     Po 5 sekundach 1 plik mp3 (podkład jest cały czas)
-#     każdy następny plik mp3 odtwarza się po 10 sekundach od zakończenia poprzedniego.
-#     po ostatnim pliku 10s i 3s fade-out.
-#     '''
-#     # instrumental = AudioSegment.from_mp3(instrumental_path)
-#     mix_position = 5000
-#     counter = 1
-#     final_mix_version = ''
+#         if number_of_rows < 1:
+#             continue
 #
-#     for file in file_names_list:
-#         file_to_mix = AudioSegment.from_wav(file)
-#         print(file)
-#         partial_mix_path_to_export = 'output-mixes/mix_' + str(counter) + '.wav'
-#         previous_mix_partial = 'output-mixes/mix_' + str(counter - 1) + '.wav'
-#         if counter == 1:
-#             current_instrumental = AudioSegment.from_wav(instrumental_path)
+#         # Access the value of the top-left cell of the merged range
+#         min_value_cell_data = sheet.cell(row=merged_range.bounds[1], column=merged_range.bounds[0]).value
+#
+#         # Check if the cell data is a string
+#         if isinstance(min_value_cell_data, str):
+#             # Remove excessive whitespace using regex
+#             cleaned_text = re.sub(r'\s+', ' ', min_value_cell_data).strip()
 #         else:
-#             current_instrumental = AudioSegment.from_wav(previous_mix_partial)
-#         print(partial_mix_path_to_export)
-#         mix = current_instrumental.overlay(file_to_mix, position=mix_position)
+#             cleaned_text = str(min_value_cell_data)
 #
-#         duration_millis = round(file_to_mix.duration_seconds * 1000)
-#         # print(str(duration_millis))
+#             # Assign time ranges from column A for each row in the merged range
+#         time_ranges = []
+#         for row in range(second_element, fourth_element + 1):
+#             time_range = sheet.cell(row=row, column=1).value  # Assuming column A is the first column
+#             time_ranges.append(time_range)
 #
-#         print("Sample duration: " + str(convertMilisecondsToMinuteSecondFormat(duration_millis)))
-#         print("Current sample position: " + str(convertMilisecondsToMinuteSecondFormat(mix_position)))
+#         if time_ranges[0].split(' - ')[0] == 'GODZINA':
+#             continue
+#         else:
+#             # print(time_ranges)
+#             # start_time = time_ranges[0].split(' - ')[0]
+#             # end_time = time_ranges[-1].split(' - ')[1]
+#             # Handling start_time and end_time based on input ranges
+#             start_range = time_ranges[0]
+#             end_range = time_ranges[-1]
 #
-#         print("Counter: " + str(counter))
-#         file_path = "./output-mixes/mix_" + str(counter) + ".wav"
-#         mix.export(partial_mix_path_to_export, format="wav")
-#         final_mix_version = partial_mix_path_to_export
+#             # Splitting start_time and end_time based on the delimiter found
+#             start_time, _ = split_time_range(start_range)  # Only need the start part
+#             _, end_time = split_time_range(end_range)  # Only need the end part
+#             # Splitting the first and last elements
+#             # start_time = re.split(r' - |- ', time_ranges[0])[0]
+#             # end_time = re.split(r' - |- ', time_ranges[-1])[-1]
+#             # print(time_ranges[0].split(' - ')[0])
+#             # print(time_ranges[-1].split(' - ')[1])
 #
-#         current_position = duration_millis + 10000
-#         mix_position += current_position
-#         counter += 1
+#         nearest_godzina_row = find_nearest_godzina(sheet, 1, merged_range.bounds[1])
 #
-#     # file_to_mix = AudioSegment.from_wav(file_names_list[1])
-#     # instrumental_2 = AudioSegment.from_mp3(file_path)
-#     # mix = fade_in_instrumental.overlay(file_to_mix, position=mix_position)
-#     # print("Mix position: " + str(mix_position))
-#     # file_path = "./output-mixes/mix_" + str(counter) + ".wav"
-#     # mix.export(file_path, format="wav")
-#     # mix_position += 10000
-#     # counter += 1
+#         # column
+#         # print(merged_range.bounds[0])
 #
-#     # E:\FlStudioVSTLargeSize\Sample\kshmr.vol.4\Vocals\Vocal Tools\Vocal Bends
-#     # print(file_location)
-#     # # Zaczyna się od podkładu, fade-in 2 sekundy.
-#     # instrumental_fade_in = contents.fade_in(2000)
-#     #
-#     # fill = AudioSegment.from_wav("./sounds/fill.wav")
-#     #
-#     # #Po 5 sekundach 1 plik mp3 (podkład jest cały czas)
-#     #  mix =  instrumental_fade_in.overlay(fill, position=5000)
-#     # file_path = "./output-mix.mp3"
-#     # mix.export(file_path, format="mp3")
+#         # row
+#         # print(nearest_godzina_row)
+#         # if merged_range.bounds[0] > 2 and merged_range.bounds[0] <= 6:
+#         #     date_column = 3
+#         # elif merged_range.bounds[0] >= 7 and merged_range.bounds[0] <= 10:
+#         #     date_column = 7
+#         # elif merged_range.bounds[0] >= 11 and merged_range.bounds[0] <= 14:
+#         #     date_column = 11
+#         # elif merged_range.bounds[0] >= 15 and merged_range.bounds[0] <= 18:
+#         #     date_column = 15
+#         # elif merged_range.bounds[0] >= 19 and merged_range.bounds[0] <= 22:
+#         #     date_column = 19
 #
-#     # return file_path
+#         date_column = 0
+#         if 2 < merged_range.bounds[0] <= 22:
+#             date_column = 3 + 4 * ((merged_range.bounds[0] - 3) // 4)
 #
-#     fade_out_path = './output-mixes/last.wav'
-#     fade_out = addFadeOutToAudioFile(final_mix_version, 10000)
-#     fade_out.export(fade_out_path, format="wav")
+#         date = sheet.cell(row=nearest_godzina_row, column=date_column).value
 #
-#     return fade_out_path
+#         words_to_remove = ["PONIEDZIAŁEK", "WTOREK", "ŚRODA", "CZWARTEK", "PIĄTEK"]
 #
+#         fromated_date = remove_words_from_string(date, words_to_remove)
 #
-# #  return final_mix_version
+#         # print(extract_date(date))  # Output: 06.12.2024
+#
+#         # print(f'Merged Range: {merged_range}, Number of Rows: { number_of_rows}, Min Value Cell Data: {cleaned_text}, Start time: {start_time}, End_time: {end_time}')
+#
+#         data = {
+#             'text': cleaned_text,
+#             'date': fromated_date,
+#             'start_time': start_time,
+#             'end_time': end_time,
+#             # 'nearest_godzina_row': nearest_godzina_row,
+#             # 'nearest_godzina_column': merged_range.bounds[0],
+#             # 'lesson_block_cells_range': merged_range.bounds,
+#
+#         }
+#         # Append each data object to the list
+#         data_list.append(data)
+#         # print('----------------------------')
+#
+#     # Convert the list of dictionaries to a JSON array of objects
+#     # json_data = json.dumps(data_list, indent=4, ensure_ascii=False)
+#
+#     # Print the resulting JSON array
+#     # print(json_data)
+#
+#     # Sort the data list by start_time in ascending order
+#     data_list.sort(key=lambda x: parse_time(x['start_time']))
+#     return data_list
 #
 #
 # origins = ["*"]
@@ -156,60 +205,55 @@
 #     allow_methods=["*"],
 #     allow_headers=["*"],
 # )
+# # app.include_router(system.router, prefix="/system")
 #
 #
-# # def validateFiles(files):
-# #     for file in files:
-# #         # # Get the file size (in bytes)
-# #         # file.file.seek(0, 2)
-# #         # file_size = file.file.tell()
-# #         #
-# #         # # move the cursor back to the beginning
-# #         # await file.seek(0)
-# #         #
-# #         # if file_size > 2 * 1024 * 1024:
-# #         #     # more than 2 MB
-# #         #     raise HTTPException(status_code=400, detail="File too large")
-# #         #
-# #         # check the content type (MIME type)
-# #         content_type = file.content_type
-# #         if content_type not in ["audio/mp3", "audio/wav", "audio/x-wav"]:
-# #             raise HTTPException(status_code=400, detail="Invalid file type. Must be audio/mp3")
+# @app.get("/statuss")
+# def status():
+#     return {"ok": True, "version": __version__}
 #
 #
-# # @app.get("/mp3")
-# # async def root():
-# #     mixer = Mixer()
-# #     filePath = mixer.mergeFiles()
-# #     # return {"message": "Welcome test", "fileName": filePath}
-# #     return FileResponse(filePath, media_type='audio/mp3')
+# @app.get("/")
+# def status():
+#     return {"ok": True, 'page': 'home'}
 #
 #
-# @app.post("/multi")
-# async def mix_files(instrumental: UploadFile):
-#     # filePath = mixFileSounds(files, instrumental)
-#     #
-#     # return FileResponse(filePath, media_type='audio/wav')
-#     return {"instrumental": instrumental.filename}
+# @app.get("/api/schedules", response_model=Dict[str, List[Dict[str, Any]]])
+# async def get_schedules():
+#     data = extract_data()
+#
+#     # Group schedules by date
+#     grouped_schedules = defaultdict(list)
+#
+#     for schedule in data:
+#         grouped_schedules[schedule['date']].append(schedule)
+#
+#     # Sort the grouped schedules by date
+#     sorted_grouped_schedules = dict(
+#         sorted(grouped_schedules.items(), key=lambda x: datetime.strptime(x[0], '%d.%m.%Y')))
+#
+#     return sorted_grouped_schedules
 #
 #
-# # @app.get("/mix")
-# # async def mix_files():
-# #     mixer = Mixer()
-# #     filePath = mixer.mixFileSounds()
-# #     return FileResponse(filePath, media_type='audio/mp3')
+# @app.post("/upload")
+# async def upload_file(file: UploadFile = File(...)):
+#     try:
+#         # Upload file to Cloudinary
+#         response = cloudinary.uploader.upload(file.file)
+#         return JSONResponse(content={"url": response['url'], "public_id": response['public_id']})
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
 #
 #
-# @app.get('/ping')
-# async def hello():
-#     return {'res': 'pong', 'version': __version__, "time": time()}
-#
-#
-# @app.get('/')
-# async def helloWorld():
-#     return {'res': 'HelloWorld'}
-#
-#
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+# @app.get("/file/{public_id}")
+# async def get_file(public_id: str):
+#     try:
+#         # Fetch file details from Cloudinary
+#         response = cloudinary.api.resource(public_id)
+#         return JSONResponse(content={"url": response['url'], "public_id": response['public_id'], "format": response['format']})
+#     except cloudinary.exceptions.NotFound:
+#         raise HTTPException(status_code=404, detail="File not found")
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
 from app.main import app
