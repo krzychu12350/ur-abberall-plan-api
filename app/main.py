@@ -235,7 +235,7 @@ def save_data_to_db(data_list):
         # Convert the date from 'DD.MM.YYYY' to 'YYYY-MM-DD'
         date_object = datetime.strptime(data['date'], '%d.%m.%Y')  # Parse the date string
         formatted_date = date_object.strftime('%Y-%m-%d')  # Format the date
-        print(formatted_date)
+        # print(formatted_date)
         query = """
         INSERT INTO schedules (text, date, start_time, end_time)
         VALUES (%s, %s, %s, %s)
@@ -287,7 +287,7 @@ async def get_schedules():
         sorted(grouped_schedules.items(), key=lambda x: datetime.strptime(x[0], '%d.%m.%Y')))
 
     # Save extracted data to MySQL database
-    save_data_to_db(data)
+    # save_data_to_db(data)
 
     return sorted_grouped_schedules
 
