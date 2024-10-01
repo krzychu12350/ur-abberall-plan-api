@@ -1,8 +1,9 @@
+import mysql.connector
 from fastapi import FastAPI, __version__, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Any
 import cloudinary
 import cloudinary.uploader
@@ -19,6 +20,7 @@ import re
 from datetime import datetime
 import requests
 from io import BytesIO
+
 # Lo
 # ad environment variables from .env file
 load_dotenv()
@@ -40,6 +42,18 @@ pattern = re.compile(r'\b\w+\s(\d{1,2})\.(\d{1,2})\.(\d{4})\b')
 # URL of the Excel file
 EXCEL_FILE_URL = "http://ur.edu.pl/files/user_directory/307/RAT%20MED%201%20ROK%202024%20stacjonarne.xlsx"
 
+# MySQL connection configuration
+DB_CONFIG = {
+    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DB', 'schedules_db')
+}
+
+
+def get_db_connection():
+    return mysql.connector.connect(**DB_CONFIG)
+
 
 def split_time_range(time_range):
     if ' - ' in time_range:
@@ -48,6 +62,7 @@ def split_time_range(time_range):
         return time_range.split('- ')
     else:
         return None, None  # In case the format is unexpected
+
 
 # Optimize the word removal by using a set for faster lookup
 def remove_words_from_string(input_string, words_to_remove):
@@ -209,6 +224,30 @@ def extract_data():
     return data_list
 
 
+def save_data_to_db(data_list):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # Truncate the table before inserting new data
+    cursor.execute("TRUNCATE TABLE schedules")
+
+    for data in data_list:
+        # Convert the date from 'DD.MM.YYYY' to 'YYYY-MM-DD'
+        date_object = datetime.strptime(data['date'], '%d.%m.%Y')  # Parse the date string
+        formatted_date = date_object.strftime('%Y-%m-%d')  # Format the date
+        print(formatted_date)
+        query = """
+        INSERT INTO schedules (text, date, start_time, end_time)
+        VALUES (%s, %s, %s, %s)
+        """
+        # print(f"Inserting data for date: {formatted_date}")  # Log the formatted date
+        cursor.execute(query, (data['text'], formatted_date, data['start_time'], data['end_time']))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+
 origins = ["*"]
 app = FastAPI()
 app.add_middleware(
@@ -218,6 +257,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 # app.include_router(system.router, prefix="/system")
 
 
@@ -245,6 +286,9 @@ async def get_schedules():
     sorted_grouped_schedules = dict(
         sorted(grouped_schedules.items(), key=lambda x: datetime.strptime(x[0], '%d.%m.%Y')))
 
+    # Save extracted data to MySQL database
+    save_data_to_db(data)
+
     return sorted_grouped_schedules
 
 
@@ -263,8 +307,62 @@ async def get_file(public_id: str):
     try:
         # Fetch file details from Cloudinary
         response = cloudinary.api.resource(public_id)
-        return JSONResponse(content={"url": response['url'], "public_id": response['public_id'], "format": response['format']})
+        return JSONResponse(
+            content={"url": response['url'], "public_id": response['public_id'], "format": response['format']})
     except cloudinary.exceptions.NotFound:
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# Function to convert ISO 8601 duration to HH:MM format
+def convert_iso_duration_to_hhmm(duration: str) -> str:
+    seconds = int(duration[2:-1])  # Extract seconds from the duration string
+    hours, remainder = divmod(seconds, 3600)  # Calculate hours and remaining seconds
+    minutes, _ = divmod(remainder, 60)  # Calculate minutes
+    return f"{hours:02}:{minutes:02}"  # Format to HH:MM
+
+
+@app.get("/api/schedules/retrieve", response_model=Dict[str, List[Dict[str, Any]]])
+async def retrieve_schedules():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        # Query to retrieve all schedules with formatted times
+        query = """
+              SELECT 
+                  text, 
+                  DATE_FORMAT(date, '%d.%m.%Y') AS date, 
+                  DATE_FORMAT(start_time, '%H:%i') AS start_time, 
+                  DATE_FORMAT(end_time, '%H:%i') AS end_time 
+              FROM 
+                  schedules
+              """
+        cursor.execute(query)
+
+        # Fetch all results
+        results = cursor.fetchall()
+
+        # Group schedules by date
+        grouped_schedules = defaultdict(list)
+        for schedule in results:
+            grouped_schedules[schedule['date']].append({
+                'text': schedule['text'],
+                'date': schedule['date'],
+                'start_time': schedule['start_time'],
+                'end_time': schedule['end_time']
+            })
+
+        # Sort the grouped schedules by date
+        sorted_grouped_schedules = dict(
+            sorted(grouped_schedules.items(), key=lambda x: datetime.strptime(x[0], '%d.%m.%Y'))
+        )
+
+        return sorted_grouped_schedules
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        connection.close()
