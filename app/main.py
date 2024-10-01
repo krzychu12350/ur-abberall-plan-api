@@ -17,6 +17,8 @@ import re
 import openpyxl
 import re
 from datetime import datetime
+import requests
+from io import BytesIO
 # Lo
 # ad environment variables from .env file
 load_dotenv()
@@ -34,6 +36,9 @@ from datetime import datetime
 
 # Precompile the regular expression for date extraction
 pattern = re.compile(r'\b\w+\s(\d{1,2})\.(\d{1,2})\.(\d{4})\b')
+
+# URL of the Excel file
+EXCEL_FILE_URL = "http://ur.edu.pl/files/user_directory/307/RAT%20MED%201%20ROK%202024%20stacjonarne.xlsx"
 
 
 def split_time_range(time_range):
@@ -76,8 +81,16 @@ def parse_time(time_str: str) -> datetime:
 
 
 def extract_data():
-    # Load the Excel workbook and sheet only once
-    workbook = openpyxl.load_workbook('./plan3.xlsx')
+    # Download the Excel file from the provided URL
+    response = requests.get(EXCEL_FILE_URL)
+
+    if response.status_code == 200:
+        # Load the Excel file into memory
+        file_stream = BytesIO(response.content)
+        workbook = openpyxl.load_workbook(file_stream)
+    else:
+        raise Exception(f"Failed to download the file. Status code: {response.status_code}")
+
     sheet = workbook['Arkusz1']  # Replace 'Arkusz1' with your actual sheet name
 
     data_list = []
