@@ -289,6 +289,21 @@ async def get_schedules():
     # Save extracted data to MySQL database
     # save_data_to_db(data)
 
+    # Convert the sorted grouped schedules to JSON
+    json_data = json.dumps(sorted_grouped_schedules, indent=4, ensure_ascii=False)
+
+    # Save JSON to Cloudinary
+    try:
+        response = cloudinary.uploader.upload(
+            BytesIO(json_data.encode('utf-8')),
+            resource_type='raw',
+            public_id='sorted_grouped_schedules',  # Customize your public ID
+            format='json'  # Specify the format as JSON
+        )
+        print(f"Uploaded to Cloudinary: {response['url']}")
+    except Exception as e:
+        print(f"Error uploading to Cloudinary: {e}")
+
     return sorted_grouped_schedules
 
 
@@ -323,7 +338,7 @@ def convert_iso_duration_to_hhmm(duration: str) -> str:
     return f"{hours:02}:{minutes:02}"  # Format to HH:MM
 
 
-@app.get("/api/schedules/retrieve", response_model=Dict[str, List[Dict[str, Any]]])
+@app.get("/api/schedules/retrieve2", response_model=Dict[str, List[Dict[str, Any]]])
 async def retrieve_schedules():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -366,3 +381,35 @@ async def retrieve_schedules():
     finally:
         cursor.close()
         connection.close()
+
+@app.get("/api/schedules/retrieve", response_model=Dict[str, Any])
+async def retrieve_sorted_grouped_schedules():
+    public_id = 'sorted_grouped_schedules.json'  # Hardcoded public_id
+    try:
+        # Fetch file details from Cloudinary
+        response = cloudinary.api.resource(public_id, resource_type='raw')
+
+        # Get the URL to download the JSON file
+        file_url = response['secure_url']
+
+        # Download the JSON file from the URL
+        json_response = requests.get(file_url)
+
+        if json_response.status_code == 200:
+            # Return the JSON data
+            return json_response.json()
+        else:
+            raise HTTPException(status_code=404, detail="File not found or could not be retrieved")
+
+    except cloudinary.exceptions.NotFound:
+        raise HTTPException(status_code=404, detail="File not found in Cloudinary")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/schedules/list_files")
+async def list_files():
+    try:
+        resources = cloudinary.api.resources(resource_type='raw')
+        return resources['resources']
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
