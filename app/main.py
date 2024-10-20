@@ -384,6 +384,7 @@ async def retrieve_schedules():
         cursor.close()
         connection.close()
 
+
 @app.get("/api/schedules/retrieve", response_model=Dict[str, Any])
 async def retrieve_sorted_grouped_schedules():
     public_id = 'sorted_grouped_schedules.json'  # Hardcoded public_id
@@ -408,6 +409,7 @@ async def retrieve_sorted_grouped_schedules():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.get("/api/schedules/list_files")
 async def list_files():
     try:
@@ -416,11 +418,17 @@ async def list_files():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# @app.post("/extract-table/")
-# async def extract_table(url: str):
+
+# @app.get("/extract-table/")
+# async def extract_table():
+#     url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
+#
 #     # Download the PDF file from the specified URL
-#     response = requests.get(url)
-#     response.raise_for_status()  # Raise an error for bad responses
+#     try:
+#         response = requests.get(url)
+#         response.raise_for_status()  # Raise an error for bad responses
+#     except requests.RequestException as e:
+#         raise HTTPException(status_code=400, detail=str(e))
 #
 #     extracted_data = []
 #
@@ -429,11 +437,14 @@ async def list_files():
 #         for page in pdf.pages:
 #             tables = page.extract_tables()
 #             for table in tables:
-#                 df = pd.DataFrame(table[1:], columns=table[0])  # Create DataFrame
-#                 extracted_data.append(df.to_dict(orient='records'))  # Convert to dict
+#                 # Create a list of dictionaries from the table data
+#                 header = table[0]  # Assume the first row is the header
+#                 for row in table[1:]:  # Iterate over the rest of the rows
+#                     row_dict = {header[i]: row[i] for i in range(len(header))}
+#                     extracted_data.append(row_dict)  # Append each row as a dict
 #
 #     # Convert extracted data to JSON
-#     json_data = json.dumps(extracted_data, indent=4, ensure_ascii=False)
+#     json_data = json.dumps(extracted_data, ensure_ascii=False)
 #
 #     # Upload JSON data to Cloudinary
 #     try:
