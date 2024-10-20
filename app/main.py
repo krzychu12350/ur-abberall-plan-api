@@ -1,27 +1,19 @@
-import mysql.connector
-from fastapi import FastAPI, __version__, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-import os
-from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
 import json
-from datetime import datetime
-import openpyxl
-import re
-import openpyxl
-import re
-from datetime import datetime
-import requests
+import os
+from collections import defaultdict
 from io import BytesIO
-import pdfplumber
-import pandas as pd
+from typing import List, Dict, Any
+
+import cloudinary
+import cloudinary.api
+import cloudinary.uploader
+import mysql.connector
+import requests
+from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import __version__
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Lo
 # ad environment variables from .env file
@@ -291,21 +283,6 @@ async def get_schedules():
     # Save extracted data to MySQL database
     # save_data_to_db(data)
 
-    # Convert the sorted grouped schedules to JSON
-    json_data = json.dumps(sorted_grouped_schedules, indent=4, ensure_ascii=False)
-
-    # Save JSON to Cloudinary
-    try:
-        response = cloudinary.uploader.upload(
-            BytesIO(json_data.encode('utf-8')),
-            resource_type='raw',
-            public_id='sorted_grouped_schedules',  # Customize your public ID
-            format='json'  # Specify the format as JSON
-        )
-        print(f"Uploaded to Cloudinary: {response['url']}")
-    except Exception as e:
-        print(f"Error uploading to Cloudinary: {e}")
-
     return sorted_grouped_schedules
 
 
@@ -340,7 +317,7 @@ def convert_iso_duration_to_hhmm(duration: str) -> str:
     return f"{hours:02}:{minutes:02}"  # Format to HH:MM
 
 
-@app.get("/api/schedules/retrieve2", response_model=Dict[str, List[Dict[str, Any]]])
+@app.get("/api/schedules/retrieve", response_model=Dict[str, List[Dict[str, Any]]])
 async def retrieve_schedules():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -418,45 +395,3 @@ async def list_files():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-# @app.get("/extract-table/")
-# async def extract_table():
-#     url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
-#
-#     # Download the PDF file from the specified URL
-#     try:
-#         response = requests.get(url)
-#         response.raise_for_status()  # Raise an error for bad responses
-#     except requests.RequestException as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-#
-#     extracted_data = []
-#
-#     # Use pdfplumber to extract tables from the PDF
-#     with pdfplumber.open(BytesIO(response.content)) as pdf:
-#         for page in pdf.pages:
-#             tables = page.extract_tables()
-#             for table in tables:
-#                 # Create a list of dictionaries from the table data
-#                 header = table[0]  # Assume the first row is the header
-#                 for row in table[1:]:  # Iterate over the rest of the rows
-#                     row_dict = {header[i]: row[i] for i in range(len(header))}
-#                     extracted_data.append(row_dict)  # Append each row as a dict
-#
-#     # Convert extracted data to JSON
-#     json_data = json.dumps(extracted_data, ensure_ascii=False)
-#
-#     # Upload JSON data to Cloudinary
-#     try:
-#         response = cloudinary.uploader.upload(
-#             BytesIO(json_data.encode('utf-8')),
-#             resource_type='raw',
-#             public_id='extracted_data',  # Customize your public ID
-#             format='json'  # Specify the format as JSON
-#         )
-#         print(f"Uploaded to Cloudinary: {response['url']}")
-#     except Exception as e:
-#         print(f"Error uploading to Cloudinary: {e}")
-#         raise HTTPException(status_code=500, detail="Failed to upload extracted data to Cloudinary")
-#
-#     return JSONResponse(content={"url": response['url'], "public_id": response['public_id']})
