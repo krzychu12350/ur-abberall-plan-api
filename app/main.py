@@ -1,28 +1,19 @@
-import mysql.connector
-from fastapi import FastAPI, __version__, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-import os
-from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
 import json
-from datetime import datetime
-import openpyxl
-import re
-import openpyxl
-import re
-from datetime import datetime
-import requests
+import os
+from collections import defaultdict
 from io import BytesIO
-import requests
-from io import BytesIO
+from typing import List, Dict, Any
 
+import cloudinary
+import cloudinary.api
+import cloudinary.uploader
+import mysql.connector
+import requests
+from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import __version__
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Lo
 # ad environment variables from .env file
