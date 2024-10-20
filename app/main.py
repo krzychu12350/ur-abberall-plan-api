@@ -422,24 +422,32 @@ async def list_files():
 @app.get("/extract-table/")
 async def extract_table():
     url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
-    # Download the PDF file from the specified URL
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an error for bad responses
 
-    extracted_data = []
+    try:
+        # Download the PDF file from the specified URL
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
 
-    # Use pdfplumber to extract tables from the PDF
-    with pdfplumber.open(BytesIO(response.content)) as pdf:
+        extracted_data = []
+
+        # Use pdfplumber to extract tables from the PDF
+        pdf = pdfplumber.open(BytesIO(response.content))  # Open PDF directly from bytes
+
+        # Iterate through each page in the PDF
         for page in pdf.pages:
-            tables = page.extract_tables()
+            tables = page.extract_tables()  # Extract tables from the current page
             for table in tables:
                 df = pd.DataFrame(table[1:], columns=table[0])  # Create DataFrame
                 extracted_data.append(df.to_dict(orient='records'))  # Convert to dict
 
-    # Convert extracted data to JSON
-    # json_data = json.dumps(extracted_data, indent=4, ensure_ascii=False)
+        pdf.close()  # Close the PDF file when done
 
-    return JSONResponse(extracted_data[1])
+        return JSONResponse(extracted_data[1])
+
+    except requests.HTTPError as http_err:
+        raise HTTPException(status_code=http_err.response.status_code, detail=str(http_err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
 
     # # Upload JSON data to Cloudinary
     # try:
