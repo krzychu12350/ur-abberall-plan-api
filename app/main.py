@@ -387,6 +387,7 @@ async def retrieve_schedules():
         cursor.close()
         connection.close()
 
+
 @app.get("/api/schedules/retrieve", response_model=Dict[str, Any])
 async def retrieve_sorted_grouped_schedules():
     public_id = 'sorted_grouped_schedules.json'  # Hardcoded public_id
@@ -411,6 +412,7 @@ async def retrieve_sorted_grouped_schedules():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.get("/api/schedules/list_files")
 async def list_files():
     try:
@@ -420,53 +422,8 @@ async def list_files():
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
 @app.get("/extract-table/")
 async def extract_table():
     url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
 
-    try:
-        # Download the PDF file from the specified URL
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad responses
-
-        extracted_data = []
-
-        # Load PDF data into BytesIO
-        # pdf_file = BytesIO(response.content)
-
-        # # Use pdfplumber to extract tables from the PDF
-        # with pdfplumber.open(pdf_file) as pdf:
-        #     for page in pdf.pages:
-        #         tables = page.extract_tables()  # Extract tables from the current page
-        #         for table in tables:
-        #             # Create a dictionary for each table row
-        #             table_data = {
-        #                 "headers": table[0],  # First row as headers
-        #                 "rows": table[1:]     # Remaining rows
-        #             }
-        #             extracted_data.append(table_data)  # Append extracted data
-        #
-        # # Convert extracted data to JSON
-        # # json_data = json.dumps(extracted_data, ensure_ascii=False, indent=4)
-        #
-        # return JSONResponse(extracted_data)
-        return "works"
-
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-    # # Upload JSON data to Cloudinary
-    # try:
-    #     response = cloudinary.uploader.upload(
-    #         BytesIO(json_data.encode('utf-8')),
-    #         resource_type='raw',
-    #         public_id='extracted_data',  # Customize your public ID
-    #         format='json'  # Specify the format as JSON
-    #     )
-    #     print(f"Uploaded to Cloudinary: {response['url']}")
-    # except Exception as e:
-    #     print(f"Error uploading to Cloudinary: {e}")
-    #     raise HTTPException(status_code=500, detail="Failed to upload extracted data to Cloudinary")
-    #
-    # return JSONResponse(content={"url": response['url'], "public_id": response['public_id']})
+    return url
