@@ -21,10 +21,8 @@ from datetime import datetime
 import requests
 from io import BytesIO
 import requests
-import pdfplumber
-import pandas as pd
 from io import BytesIO
-import fitz  # PyMuPDF
+
 
 # Lo
 # ad environment variables from .env file
@@ -421,9 +419,3 @@ async def list_files():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-@app.get("/extract-table/")
-async def extract_table():
-    url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
-
-    return url
