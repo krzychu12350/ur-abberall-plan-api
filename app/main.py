@@ -433,7 +433,7 @@ async def extract_table():
         extracted_data = []
 
         # Load PDF data into BytesIO
-        pdf_file = BytesIO(response.content)
+        # pdf_file = BytesIO(response.content)
 
         # # Use pdfplumber to extract tables from the PDF
         # with pdfplumber.open(pdf_file) as pdf:
@@ -451,7 +451,7 @@ async def extract_table():
         # # json_data = json.dumps(extracted_data, ensure_ascii=False, indent=4)
         #
         # return JSONResponse(extracted_data)
-        return pdf_file
+        return "works"
 
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
