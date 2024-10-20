@@ -20,6 +20,8 @@ import re
 from datetime import datetime
 import requests
 from io import BytesIO
+import pdfplumber
+import pandas as pd
 
 # Lo
 # ad environment variables from .env file
@@ -413,3 +415,37 @@ async def list_files():
         return resources['resources']
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+# @app.post("/extract-table/")
+# async def extract_table(url: str):
+#     # Download the PDF file from the specified URL
+#     response = requests.get(url)
+#     response.raise_for_status()  # Raise an error for bad responses
+#
+#     extracted_data = []
+#
+#     # Use pdfplumber to extract tables from the PDF
+#     with pdfplumber.open(BytesIO(response.content)) as pdf:
+#         for page in pdf.pages:
+#             tables = page.extract_tables()
+#             for table in tables:
+#                 df = pd.DataFrame(table[1:], columns=table[0])  # Create DataFrame
+#                 extracted_data.append(df.to_dict(orient='records'))  # Convert to dict
+#
+#     # Convert extracted data to JSON
+#     json_data = json.dumps(extracted_data, indent=4, ensure_ascii=False)
+#
+#     # Upload JSON data to Cloudinary
+#     try:
+#         response = cloudinary.uploader.upload(
+#             BytesIO(json_data.encode('utf-8')),
+#             resource_type='raw',
+#             public_id='extracted_data',  # Customize your public ID
+#             format='json'  # Specify the format as JSON
+#         )
+#         print(f"Uploaded to Cloudinary: {response['url']}")
+#     except Exception as e:
+#         print(f"Error uploading to Cloudinary: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to upload extracted data to Cloudinary")
+#
+#     return JSONResponse(content={"url": response['url'], "public_id": response['public_id']})
