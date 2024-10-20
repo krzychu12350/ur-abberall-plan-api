@@ -419,35 +419,39 @@ async def list_files():
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/extract-table/")
-async def extract_table():
-    url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
-
-    try:
-        # Download the PDF file from the specified URL
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad responses
-
-        extracted_data = []
-
-        # Use pdfplumber to extract tables from the PDF
-        pdf = pdfplumber.open(BytesIO(response.content))  # Open PDF directly from bytes
-
-        # Iterate through each page in the PDF
-        for page in pdf.pages:
-            tables = page.extract_tables()  # Extract tables from the current page
-            for table in tables:
-                df = pd.DataFrame(table[1:], columns=table[0])  # Create DataFrame
-                extracted_data.append(df.to_dict(orient='records'))  # Convert to dict
-
-        pdf.close()  # Close the PDF file when done
-
-        return JSONResponse(extracted_data[1])
-
-    except requests.HTTPError as http_err:
-        raise HTTPException(status_code=http_err.response.status_code, detail=str(http_err))
-    except Exception as err:
-        raise HTTPException(status_code=500, detail=str(err))
+# @app.get("/extract-table/")
+# async def extract_table():
+#     url = 'https://rudnik.pl/wp-content/uploads/2023/12/R2.pdf'
+#
+#     try:
+#         # Download the PDF file from the specified URL
+#         response = requests.get(url)
+#         response.raise_for_status()  # Raise an error for bad responses
+#
+#         extracted_data = []
+#
+#         # Load PDF data into BytesIO
+#         pdf_file = BytesIO(response.content)
+#
+#         # Use pdfplumber to extract tables from the PDF
+#         with pdfplumber.open(pdf_file) as pdf:
+#             for page in pdf.pages:
+#                 tables = page.extract_tables()  # Extract tables from the current page
+#                 for table in tables:
+#                     # Create a dictionary for each table row
+#                     table_data = {
+#                         "headers": table[0],  # First row as headers
+#                         "rows": table[1:]     # Remaining rows
+#                     }
+#                     extracted_data.append(table_data)  # Append extracted data
+#
+#         # Convert extracted data to JSON
+#         # json_data = json.dumps(extracted_data, ensure_ascii=False, indent=4)
+#
+#         return JSONResponse(content=extracted_data)
+#
+#     except Exception as e:
+#         return JSONResponse(content={"error": str(e)}, status_code=500)
 
     # # Upload JSON data to Cloudinary
     # try:
