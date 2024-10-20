@@ -1,19 +1,25 @@
-import json
-import os
-from collections import defaultdict
-from io import BytesIO
-from typing import List, Dict, Any
-
-import cloudinary
-import cloudinary.api
-import cloudinary.uploader
 import mysql.connector
-import requests
-from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi import __version__
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, __version__, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import List, Dict, Any
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import os
+from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+import json
+from datetime import datetime
+import openpyxl
+import re
+import openpyxl
+import re
+from datetime import datetime
+import requests
+from io import BytesIO
 
 # Lo
 # ad environment variables from .env file
@@ -283,6 +289,21 @@ async def get_schedules():
     # Save extracted data to MySQL database
     # save_data_to_db(data)
 
+    # Convert the sorted grouped schedules to JSON
+    json_data = json.dumps(sorted_grouped_schedules, indent=4, ensure_ascii=False)
+
+    # Save JSON to Cloudinary
+    try:
+        response = cloudinary.uploader.upload(
+            BytesIO(json_data.encode('utf-8')),
+            resource_type='raw',
+            public_id='sorted_grouped_schedules',  # Customize your public ID
+            format='json'  # Specify the format as JSON
+        )
+        print(f"Uploaded to Cloudinary: {response['url']}")
+    except Exception as e:
+        print(f"Error uploading to Cloudinary: {e}")
+
     return sorted_grouped_schedules
 
 
@@ -317,7 +338,7 @@ def convert_iso_duration_to_hhmm(duration: str) -> str:
     return f"{hours:02}:{minutes:02}"  # Format to HH:MM
 
 
-@app.get("/api/schedules/retrieve", response_model=Dict[str, List[Dict[str, Any]]])
+@app.get("/api/schedules/retrieve2", response_model=Dict[str, List[Dict[str, Any]]])
 async def retrieve_schedules():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -361,7 +382,6 @@ async def retrieve_schedules():
         cursor.close()
         connection.close()
 
-
 @app.get("/api/schedules/retrieve", response_model=Dict[str, Any])
 async def retrieve_sorted_grouped_schedules():
     public_id = 'sorted_grouped_schedules.json'  # Hardcoded public_id
@@ -386,7 +406,6 @@ async def retrieve_sorted_grouped_schedules():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @app.get("/api/schedules/list_files")
 async def list_files():
     try:
@@ -394,4 +413,3 @@ async def list_files():
         return resources['resources']
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
