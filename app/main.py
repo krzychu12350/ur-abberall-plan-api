@@ -21,8 +21,10 @@ from datetime import datetime
 import requests
 from io import BytesIO
 
+import requests
 import pdfplumber
 import pandas as pd
+from io import BytesIO
 
 # Lo
 # ad environment variables from .env file
